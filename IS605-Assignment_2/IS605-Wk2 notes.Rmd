@@ -1,0 +1,84 @@
+---
+title: "IS605-Week 2 Notes"
+author: "J. Hamski"
+date: "September 3, 2015"
+output: html_document
+---
+*note: material from G. Iyengar's Computational Mathematics course notes. Some additional material from G. Strang's Introduction to Linear Algebra.* 
+
+##Basic Matrix Properties
+
+Matrices can be added together if their shapes are the same. That is, if they have the same number of rows and columns. To add matrices together, you simply operate on them element-by-element.
+```{r}
+A <- matrix(seq(from=1,to=6), nrow=2, byrow=T) 
+B <- matrix(seq(from=12,to=7), nrow=2)
+A+B
+```
+
+To multiply matrices, the number of columns of the matrix on the left has to match the number of rows of the matrix on the right. 
+
+If A you want to do *A x B* and A is *m x n* and B is *n x k*, then AB will be an *m x k* matrix. Each entry in the product matrix will be the dot-product between one row of A and one column of B. *ABij*, or the element at row i and column j in matrix AB is the dot-product between row i of A and column j of B. 
+
+To test out multiplication, we can't use the existing B. Using an arbitrary matrix C:
+```{r}
+C = matrix(c(5,7,3,12,9,0),3,2)
+C
+#dot product in R is %*%
+#AC results in a 4x4 matrix
+A%*%C
+```
+Or, use the transpose (columns to row, rows to columns) of B:
+```{r}
+A%*%t(B)
+```
+Note that if we instead use the transpose of A, we're using a 3 x 2 matrix on the right hand side. This results in a 3 x 3 matrix, not a 2 x 2. The size is determined by the number of rows in the multiplier on the right hand side. Remember that AB != BA
+```{r}
+t(A)
+t(A)%*%B
+```
+  
+Matrices follow these basic laws below:
+A+B=B+A 
+c(A + B) = cA + cB 
+A + (B + C) = (A + B) + C 
+C(A + B) = CA + CB 
+(A + B)C = AC + BC 
+AB̸!= BA
+(AB)C = A(BC)
+
+##3 Square Matrices and Inverses
+Square matrices have equal number of rows and columns (m = n).
+
+An identy matrix I has 1's along the diagonal. For any compatible matrix A:
+IA = A = AI
+
+```{r}
+
+I <- matrix(c(1,0,0,0,1,0,0,0,1), 3, 3)
+
+```
+
+Some square matrices have complement matrices. When multiplied together, the product is the identity matrix:
+AB = I
+If there's a matrix such that AB = I and BA = I then B is the inverse of a and is denoted A-1. Not all matrices are invertable. 
+
+
+
+
+##5 Factorization of A into LU
+
+
+```{r}
+#Quick extercise- write a function to create an identy matrix for a given row/column size m >= 2
+#
+id.matrix <- function(m){
+  for(i in seq(1,m,1)){
+    
+  }
+  components = c(1,0,0,0,1,0,0,0,1)
+  matrix = matrix(components, m, m)
+}
+  
+(matrix <-id.matrix(3))
+
+```

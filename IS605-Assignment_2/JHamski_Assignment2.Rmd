@@ -1,0 +1,173 @@
+---
+title: "IS605-Assignment 2"
+author: "J. Hamski"
+date: "September 3, 2015"
+output: pdf_document
+---
+#Problem Set 1 
+
+![alt text](problem_set_1.png)
+
+#Problem Set 2
+Write an R function to factorize a square matrix A into LU or LDU, whichever you prefer. You don’t have to worry about permuting rows of A and you can assume that A is less than 5x5, if you need to hard-code any variables in your code. If you doing the entire assignment in R, then please submit only one markdown document for both the problems.
+```{r}
+#First, the easy example from Wk2 Notes:
+M <- matrix(c(2,6,1,8),2,2)
+
+elim <- diag(length(M[1,]))
+
+piv.col<-1
+row.order<-1
+
+elim[piv.col+row.order,piv.col] <- (-1)*(M[piv.col,piv.col]/M[piv.col+row.order,piv.col])**(-1)
+
+print(elim)
+
+#the product of: (1) the inverse of the elimination matrix (2) the elimination matrix and 
+#(3) the original matrix should equal the original matrix M:
+
+solve(elim)%*%(elim%*%M) == M
+```
+
+
+```{r}
+#Next, the 3x3 example
+A <- matrix(c(1,2,3,1,1,1,2,0,1),nrow=3)
+
+#Function that calculates the elimination matrices
+elim.matrix<-function(M,piv.col, row.order){
+  elim <- diag(length(M[1,]))
+  
+  elim[piv.col+row.order,piv.col] <- (-1)*(M[piv.col,piv.col]/M[piv.col+row.order,piv.col])**(-1)
+  
+  return(elim)}
+
+#change original matrix subscript "a, b,..." for each step that a calculation uses the matrix A
+A.a <- A
+
+E21 <- elim.matrix(A.a,1,1)
+E31 <- elim.matrix(A.a,1,2)
+
+A.b <- E31 %*% E21 %*% A
+
+E32<-elim.matrix(A.b,2,1)
+
+U <- E32 %*% E31 %*% E21 %*% A
+
+L <- solve(E21) %*% solve(E31) %*% solve(E32)
+```
+
+**Strategy: build out elimination algorithm that:**  
+ 1. Defines piv.col (the column of the privot), and row.order, the "row order" (my made up term for whether you're eliminating the first row below the pivot row, second row, etc..) agorithmically depending on the size of the matrix, not hard-coded as in the above example.       
+ 2. Calculates the elimination matrices.  
+ 3. Keeps track of the elimination matrices so they may be used to find L and U.   
+  
+Architecture note: group steps into separate functions. Use apply instead of loops if practical. 
+```{r}
+A <- matrix(c(1,2,3,1,1,1,2,0,1),nrow=3)
+
+elim.matrix<-function(M,piv.col, row.order){
+  elim <- diag(length(M[1,]))
+  
+  elim[piv.col+row.order,piv.col] <- (-1)*(M[piv.col,piv.col]/M[piv.col+row.order,piv.col])**(-1)
+  
+  return(elim)}
+```
+
+Strategy for piv.col and row.order:
+Notice in example there's a pattern of input that corresponds to the row reduction algorithm's steps. It can be described as a 2x3 matrix:
+```{r}
+steps.3 <- matrix(c(1,1,2,1,2,1),3,2)
+
+#I found the matrices that describe the steps for 4x4 and 5x5 matrices by hand. 
+#Since the problem states that the largest matrix tested is 5x5, these could be hard coded (and that seems simplest at this point). 
+#However, these matrices do follow a factorial pattern and could be found for any reasonably sized square matrix. 
+
+#for a 4x4
+steps.4 <- matrix(c(1,1,1,2,2,3,1,2,3,1,2,1),6,2)
+
+#for a 5x5
+steps.5 <- matrix(c(1,1,1,1,2,2,2,3,3,4,1,2,3,4,1,2,3,1,2,1), 10,2)
+```
+
+Rewrite the elim.matrix function to take a row above matrices as arguments. 
+```{r}
+A <- matrix(c(1,2,3,1,1,1,2,0,1),nrow=3)
+
+elim.matrix<-function(M, step){
+  piv.col<-step[1]
+  row.order<-step[2]
+  elim <- diag(nrow = nrow(M))
+  elim[piv.col+row.order,piv.col] <- (-1)*(M[piv.col,piv.col]/M[piv.col+row.order,piv.col])**(-1)
+  
+  elim <- as.matrix(elim)
+  return(elim)}
+```
+
+Now, step through the appropriate "steps" matrix to calculate each elimination matrix:
+```{r}
+for(i in (1:nrow(steps.3))){print(is.matrix(elim.matrix(A,steps.3[i,])))}
+```
+We need these as seperate objects for more calculations:
+```{r}
+elim.list <-vector("list", nrow(steps.3))
+
+for(i in (1:nrow(steps.3))){
+  elim.list[[i]]<-elim.matrix(A,steps.3[i,])}
+```
+
+Finally, calculate U and L from the list of elimination matrices. This shows that the LU decomposition is working correctly. 
+```{r}
+(L <- solve(elim.list[[1]]) %*% solve(elim.list[[2]]) %*% solve(elim.list[[3]]))
+
+(U <- elim.list[[3]] %*% elim.list[[2]] %*% elim.list[[1]] %*% A)
+
+L %*% U == A
+```
+
+Now to test on 4x4 and 5x5 matrices. I did test on random sample coefficients from 0 to 50 and ran into some problems with floating-point precision - an interesting note and someting understand in applications.
+```{r}
+#It's important to check that the first coefficient isn't zero since there isn't any swapping of rows. Also, make sure they're invertable...remarkably, when I used set.seed(4092834) it came up with two identical rows in the 4x4 matrix. 
+
+set.seed(224)
+B <- sample(0:10, 16, replace=T)
+B <- matrix(data = B, 4, 4)
+solve(B)
+
+C <- sample(1:10, 25, replace=T)
+C <- matrix(C, 5, 5)
+solve(C)
+```
+
+4x4
+```{r}
+
+elim.list.4 <-vector("list", nrow(steps.4))
+
+for(i in (1:nrow(steps.4))){
+  elim.list.4[[i]]<-elim.matrix(B,steps.4[i,])}
+
+#Hard-coding the final dot products is a bad solution. Need to get this into an apply function...but it is proving difficult to work with a list of matrices. 
+(L.4 <- solve(elim.list.4[[1]]) %*% solve(elim.list.4[[2]]) %*% solve(elim.list.4[[3]]) %*% solve(elim.list.4[[4]]) %*% solve(elim.list.4[[5]]) %*% solve(elim.list.4[[6]]) )
+
+(U.4 <- elim.list.4[[6]] %*% elim.list.4[[5]] %*% elim.list.4[[4]] %*% elim.list.4[[3]] %*% elim.list.4[[2]] %*% elim.list.4[[1]] %*% B)
+
+L.4 %*% U.4 == B
+```
+
+5x5
+```{r}
+elim.list.5 <-vector("list", nrow(steps.5))
+
+for(i in (1:nrow(steps.5))){
+  elim.list.5[[i]]<-elim.matrix(C,steps.5[i,])}
+
+
+(L.5 <- solve(elim.list.5[[1]]) %*% solve(elim.list.5[[2]]) %*% solve(elim.list.5[[3]]) %*% solve(elim.list.5[[4]]) %*% solve(elim.list.5[[5]]) %*% solve(elim.list.5[[6]]) %*% solve(elim.list.5[[7]]) %*% solve(elim.list.5[[8]]) %*% solve(elim.list.5[[9]]) %*% solve(elim.list.5[[10]]))
+
+(U.5 <- elim.list.5[[10]] %*% elim.list.5[[9]] %*% elim.list.5[[8]] %*% elim.list.5[[7]] %*% elim.list.5[[6]] %*% elim.list.5[[5]] %*% elim.list.5[[4]] %*% elim.list.5[[3]] %*% elim.list.5[[2]] %*% elim.list.5[[1]] %*% C)
+
+L.5 %*% U.5 == C
+#while the exact answer isn't reached, it appears due to floating point errors.
+C - L.5 %*% U.5
+```

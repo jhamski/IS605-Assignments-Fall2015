@@ -1,0 +1,161 @@
+---
+title: "IS605-Assignment-7"
+author: "J. Hamski"
+date: "October 8, 2015"
+output: html_document
+---
+```{r, message=FALSE}
+require(magrittr)
+```
+
+Create an array of integers. If we randomly sample from the uniform distribution [0 to 10], the average should be: (0+10)/2 = 5 
+```{r}
+size <- 10000
+a <- runif(n=size, min=0, max=10)
+hist(a, breaks=c(0,1,2,3,4,5,6,7,8,9,10))
+```
+
+First, the mean is calculated with the built in *mean* function. Next, it is calculated using only R base functions *sum* and *length*. In **mean.base**, R must iterate through the array twice, once to find the sum and again to find the length. Floating point errors and the fact that we're sampling from a distribution results in a mean close to, but not exactly, 5. 
+```{r}
+(mean.builtin <- mean(a))
+
+mean.base <- function(array){
+  mean <- sum(array)/length(array)
+  return(mean)
+}
+
+(mean.base <- mean.base(a))
+
+all.equal(mean.builtin, mean.base, 5)
+```
+  
+Using the definition of the standard deviation of the uniform distribution, the standard deviation should be:
+```{r}
+(sd.stat <- sqrt(((10-0)**2)/12))
+```
+
+The sample standard deviation is:
+```{r}
+(sd.builtin <- sd(a))
+
+sd <- function(a){
+ mean.a <- mean(a)
+ sd.diff <- function(i){return((i-mean.a)**2)}
+ sd <- 
+   lapply(a, FUN<-sd.diff) %>%
+   unlist()%>%
+   mean()%>%
+   sqrt()
+ return(sd)
+}
+(sd.base <- sd(a))
+
+all.equal(sd.builtin, sd.base, sd.stat)
+```
+  
+*Now, consider that instead of being able to neatly fit the values in memory in an array, you have an infinite stream of numbers coming by. How would you estimate the mean and standard deviation of such a stream? Your function should be able to return the current estimate of the mean and standard deviation at any time it is asked. Your program should maintain these current estimates and return them back at any invocation of these functions. (Hint: You can maintain a rolling estimate of the mean and standard deviation and allow these to slowly change over time as you see more and more new values).*
+
+To calculate the average of a continuous stream of numbers, we have some issues to tackle. Let's say we just tack on the new number to the numerator of the mean formula, which is just the sum of the set, and add one to the denominator.
+
+```{r}
+
+cnt <- 1
+sum <- 0 
+means <- 0
+
+mean.running <- function(array){
+  for(i in array){
+    
+    sum <- i + sum
+    cnt <- cnt+1
+    mean <- sum/cnt
+    means <- c(means, mean)
+  }
+  return(means)
+}
+
+mean.a.1 <- mean.running(a)
+plot(mean.a.1)
+```
+
+This solutions sort of works. The 'mean' can be provided at any point in the stream of numbers. However, the sum and cnt will grow so large it will slow and eventually limit the ability to calculate the exact mean of the dataset. Rewriting the function we can set it up to continually update the mean instead of recalculate it as a whole. 
+
+```{r}
+mean.running.2 <-function(a){
+  rec <- vector(mode="numeric", length=0)
+  len.a <- length(a)
+  ave.old <-0
+  for (i in 1:len.a){
+    if(i==2) ave.old <- (a[1]+a[2])/2 
+    else(i > 2)
+      a.iter <- 1/i
+      ave.new <- (1-a.iter)*ave.old+(a.iter*a[i])
+      rec <- c(rec, ave.new)
+      ave.old <- ave.new
+      rm(ave.new)
+  }
+  return(rec)
+}
+
+mean.running.2 <- mean.running.2(a)
+plot(mean.running.2)
+```
+
+Still, at extremely high numbers I believe the fractions in the above function will begin to loose precision. For mean, it appears necissary to "forget" some amount of informaton.   
+
+A moving average works by "forgetting" some date to keep the integer sizes reasonable. By picking a window that easily fits into memory then as a new integer comes in at the beginning of the array, another one leaves at the end. One thing I wanted to test was how this would work if instead of putting the integers in sequentially, you put them into a data store at random:
+
+```{r}
+
+array.store <- 1e3
+store <- rep(NA, array.store)
+
+test.size <- 1e5
+means.2 <- 0
+mean.running.2 <- function(store, test.size){
+  for (i in 1:test.size){
+    #make a random number one the fly 
+    random.number <- runif(1,0,10)
+    #randomly place it in the test matrix
+    index <- sample(1:array.store, 1, replace=TRUE)
+    store[index] <- random.number
+    mean.i <- mean(store)
+    means.2 <- c(means.2, mean.i)
+  }
+  return(means.2)
+}
+
+b <- mean.running.2(store, test.size)
+plot(b)
+```
+  
+This method has a somewhat higher variance, but at least the memory is capped by the size of the store. 
+
+Calculating the running standard deviation proceeds below. 
+Primary reference: http://www.johndcook.com/blog/standard_deviation/
+
+```{r}
+
+sd.running <- function(a){
+  rec <- vector(mode="numeric", length=0)
+  M.old <- a[1]
+  S.old <- 0
+  len.a <- length(a)
+  
+  for (i in 1:len.a){
+      M.k <- M.old + (a[i]-M.old)/i
+      S.k <- S.old + (a[i]-M.old)*(a[i]-M.k)
+      sd <- sqrt(S.k/(i-1))
+      rec <- c(rec, sd)
+    
+      M.old <- M.k 
+      S.old <- S.k
+      rm(M.k)
+      rm(S.k)
+  }
+  return(rec)
+}
+
+sd.running.rec <- sd.running(a)
+plot(sd.running.rec)
+```

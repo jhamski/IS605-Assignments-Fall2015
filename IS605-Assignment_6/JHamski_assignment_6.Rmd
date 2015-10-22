@@ -1,0 +1,197 @@
+---
+title: "IS605-Assignment 6"
+author: "J. Hamski"
+date: "September 30, 2015"
+output: html_document
+---
+  
+Packages used:
+```{r, message=FALSE}
+require(magrittr)
+require(rvest)
+require(tm)
+require(dplyr)
+require(SnowballC)
+require(RWeka)
+require(knitr)
+```
+
+
+##Problem Set 1
+
+I attempted each problem using the laws of probability and simulation. 
+
+I've found that when learning probability, it is usually taught in such a way that you use the logic of pobability for easy problems, then simulate the more complicated problems. However, if you don't simulate the easy problems for practice, you'll never know how to simulate the complicated ones. 
+
+###When you roll a fair die 3 times, how many possible outcomes are there?
+
+By probability laws:
+```{r}
+(outcomes <- 6^3)
+```
+
+By simulation:
+```{r}
+outcomes<-
+  replicate(10000, sample(c(1:6),3, replace=T)) %>% # simulate rolling 3 die 10K times
+  t() %>% # transpose the matrix so each row is a die roll simulation
+  unique() %>% # return only unique rows from the simulations matrix
+  nrow() %>% # count the number of rows in the unique simulations matrix 
+  print
+```
+
+###What is the probability of getting a sum total of 3 when you roll a die two times?
+
+By probability laws:
+```{r}
+total.sums <- 6^2
+sum.three <- 2 # 1+2, 2+1
+
+(probability <- sum.three / total.sums)
+
+```
+
+By simulation:
+```{r}
+probability <- 
+  replicate(100000, sample(c(1:6), 2, replace=T)) %>% # simlate rolling 2 die 100K times
+  t() %>% # transpose to work with row functions
+  rowSums() %>% # sum each row
+  equals(3) %>% # test if each sum is equal to 3
+  sum(na.rm=T) %>% # count rows that are equal to 3
+  divide_by(100000) %>% # divide by the total number of roll simulations
+  print
+```
+
+###Assume a room of 25 strangers. What is the probability that two of them have the same birthday? Assume that all birthdays are equally likely and equal to 1/365 each. What happens to this probability when there are 50 people in the room?
+
+By probability laws:
+```{r}
+# Approximation from the Taylor series expansion.
+# See:https://en.wikipedia.org/wiki/Birthday_problem#Approximations
+n = 25
+d = 365
+
+1-exp(1)^(-n*(n-1)/(2*d))
+
+n = 50
+d = 365
+
+1-exp(1)^(-n*(n-1)/(2*d))
+
+```
+
+By simulation:
+```{r}
+sim.count <- 100000
+nomatched.birthdays <- 
+  replicate(sim.count, sample(c(1:365), 25, replace=T)) %>% # simlate rolling 2 die 100K times
+  t() %>%
+  apply(MARGIN=1, FUN=anyDuplicated) %>%
+  as.list %>%
+  equals(0)
+
+cnt.nomatched.birthdays <- sum(nomatched.birthdays==FALSE)
+
+(probability.25 <- cnt.nomatched.birthdays/sim.count)
+
+############ 50 people in room ############ 
+sim.count <- 100000
+nomatched.birthdays <- 
+  replicate(sim.count, sample(c(1:365), 50, replace=T)) %>%
+  t() %>%
+  apply(MARGIN=1, FUN=anyDuplicated) %>%
+  as.list %>%
+  equals(0)
+
+cnt.nomatched.birthdays <- sum(nomatched.birthdays==FALSE)
+
+(probability.50 <- cnt.nomatched.birthdays/sim.count)
+
+```
+
+
+##Problem Set 2
+*Sometimes you cannot compute the probability of an outcome by measuring the sample space and examining the symmetries of the underlying physical phenomenon, as you could do when you rolled die or picked a card from a shuffled deck. You have to estimate probabilities by other means. For instance, when you have to compute the probability of various english words, it is not possible to do it by examination of the sample space as it is too large. You have to resort to empirical techniques to get a good enough estimate. One such approach would be to take a large corpus of documents and from those documents, count the number of occurrences of a particular character or word and then base your estimate on that.*  
+
+*Write a program to take a document in English and print out the estimated probabilities for each of the words that occur in that document. Your program should take in a file containing a large document and write out the probabilities of each of the words that appear in that document. Please remove all punctuation (quotes, commas, hyphens etc) and convert the words to lower case before you perform your calculations.*  
+
+I used several text files from the Enron Email Corpus (*Styler, Will (2011). The EnronSent Corpus. Technical Report 01-2011, University of Colorado at Boulder Institute of Cognitive Science, Boulder, CO.*) as a data source. 
+
+While not explicit in the instructions, I removed stopwords to make the analysis more interesting. Without removing stopwords the top terms were: the, and, you, for, that, this, have, will, are, with. 
+```{r, warning=FALSE, message=FALSE, results="hide"}
+source.1 <- DirSource("enronsent/") #input path for documents
+enron.corpus <- Corpus(source.1, readerControl=list(reader=readPlain))
+
+enron.corpus <- enron.corpus %>%
+  tm_map(content_transformer(function(x) iconv(x, to='UTF-8-MAC', sub='byte')), mc.cores=1)%>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(content_transformer(tolower))%>%
+  tm_map(removeWords, stopwords('english'))%>%
+  tm_map(stemDocument)
+
+TDM.enron <- TermDocumentMatrix(enron.corpus)
+TDM.printed <- inspect(TDM.enron)
+```
+
+```{r}
+WordFrequencies <- data.frame(Terms = rownames(TDM.printed), Freq = rowSums(TDM.printed))
+
+total.words <- sum(WordFrequencies[[2]])
+WordFrequencies$Freq <-WordFrequencies$Freq / total.words
+
+WordFrequencies <- WordFrequencies %>%
+  arrange(desc(Freq))%>%
+  tbl_df %>%
+  print
+```
+
+
+
+
+*Extend your program to calculate the probability of two words occurring adjacent to each other. It should take in a document, and two words (say the and for) and compute the probability of each of the words occurring in the document and the joint probability of both of them occurring together. The order of the two words is not important.*
+
+Unfortunatley I was not able to figure out the tokenization concept to get this to work. I look forward to seeing working solutions. 
+```{r}
+
+#Tokenizer for n-grams and passed on to the term-document matrix constructor
+library(RWeka)
+span <- 4 # how many words either side of word of interest
+span1 <- 1 + span * 2 
+ngramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = span1, max = span1))
+dtm <- TermDocumentMatrix(enron.corpus, control = list(tokenize = ngramTokenizer))
+inspect(dtm)
+
+#  find ngrams that have the node word in them
+word <- 'thank'
+subset_ngrams <- dtm$dimnames$Terms[grep(word, dtm$dimnames$Terms)]
+
+# keep only ngrams with the word of interest in the middle. This
+# removes duplicates and let's us see what's on either side
+# of the word of interest
+
+subset_ngrams <- subset_ngrams[sapply(subset_ngrams, function(i) {
+  tmp <- unlist(strsplit(i, split=" "))
+  tmp <- tmp[length(tmp) - span]
+  tmp} == word)]
+
+```
+
+
+*Use the accompanying document for your testing purposes. Compare your probabilities of various words with the Time Magazine corpus: http://corpus.byu.edu/time/*  
+
+I compared the average frequency of occurence between the Time dataset and the Enron emails. Note the strange occurance of "plea". While this may be the legal term, I instead think it is the word "please", but has been chopped up by the document stemming. Therefore, the Time comparison is for please, not plea. 
+```{r}
+# occurence per million words
+Time <- c(2212, 1986, 1094, 618, 47, 41, 1886, 0.47, 76, 276)
+Time <-Time/1000000
+
+Enron <- c(0.015199311,0.006606625,0.006496985,0.006468792,0.006299632,0.005601065,0.005181298,0.005055995,0.005030934,0.004291644)
+
+Terms <- c("wil", "can", "get", "know", "plea", "thank", "time", "ani", "enron", "let") 
+
+(comparison <- cbind(Terms, Enron, Time))
+```
+

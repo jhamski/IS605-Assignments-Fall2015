@@ -1,0 +1,100 @@
+---
+title: "IS605-Assignment 2"
+author: "J. Hamski"
+date: "September 24, 2015"
+output: html_document
+---
+##Problem Set 1
+
+The least squares method utilizes geometry to minimize the distance between the column space of a matrix A and the vector b that represents the solutions to the linear system of equations.  
+```{r}
+
+A.1<- matrix(c(1,1,1,1,0,1,3,4), 4, 2)
+b.1<- c(0,8,8,20)
+
+left <-t(A.1)%*%A.1
+right <-t(A.1)%*%b.1
+
+x.hat <- solve(left)%*%right
+
+solve.LS <-function(A,b){
+  x.hat <- solve(t(A)%*%A)%*%(t(A)%*%b)
+  return(x.hat)
+}
+
+(x.hat <- solve.LS(A.1,b.1))
+
+
+#Check work using a known solution featured here: 
+#https://www.youtube.com/watch?v=Z0wELiinNVQ
+A.2<- matrix(c(1,1,1,1,1,2,3,4),4,2)
+b.2<- c(1,3,3,5)
+solve.LS(A.2, b.2)
+```
+
+The squared error is the square root of the sum of the squared components. This is the same as the Euclidian distance function "dist" in R. 
+```{r}
+(residuals.1 <-b.1 - (A.1 %*% x.hat)) 
+error.1 <-dist(residuals.1)
+error.1[3]
+```
+
+
+The next vector of b is a solution to the system of equations, therefore its residuals are zero. Note that due to floating point errors, the residuals must be rounded. 
+```{r}
+b.2 = c(1,5,13,17)
+x.hat.2 <-solve.LS(A.1, b.2)
+
+(residuals.2 <-b.2 - (A.1 %*% x.hat.2)) 
+error.2 <-dist(zapsmall(residuals.2, digits = 0))
+error.2[3]
+```
+
+Error e = b-p = [-1; 3.-5;3]. This is equal to the residuals calculated above. 
+```{r}
+(e <-b.1-b.2)
+```
+
+Show that error e is orthogal to P and each of the columns of A. The dot product of two orthogonal vectors is 0. 
+```{r}
+0 == e%*%b.2
+
+0 == e%*%A.1[,1]
+
+0 == e%*%A.1[,2]
+```
+
+
+##Problem Set 2
+```{r}
+library(readr)
+#note I opted to open the data in Excel and save with commas as delineators. 
+col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
+cars <- read_csv(file="auto-mpg.csv", col_names=col.names)
+
+A.cars <- as.matrix(cars[,1:4])
+b.cars <- as.matrix(cars[,5])
+
+x.hat.cars <- solve.LS(A.cars, b.cars)
+```
+The linear equation that best models the dataset is:
+mpg = -0.029(displacement)+0.158(horsepower)-0.0063(weight)+1.99(acceleration)
+
+The error is:
+```{r}
+residuals.cars <- b.cars - (A.cars %*% x.hat.cars)
+(error.cars<-(sqrt(residuals.cars[,1]%*%residuals.cars[,1])))
+```
+
+It struck me that these measures are a mix of large and small numbers. So, I tried the above methods but on a scaled dataset. 
+```{r}
+cars.scaled <- scale(cars)
+A.cars.scaled <- as.matrix(cars.scaled[,1:4])
+b.cars.scaled <- as.matrix(cars.scaled[,5])
+
+x.hat.cars.scaled <- solve.LS(A.cars.scaled, b.cars.scaled)
+
+residuals.cars.scaled <- b.cars.scaled - (A.cars.scaled %*% x.hat.cars.scaled)
+(error.cars<-(sqrt(residuals.cars.scaled[,1]%*%residuals.cars.scaled[,1])))
+```
+This reduced the error by one order of magnitude. 

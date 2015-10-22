@@ -1,0 +1,108 @@
+---
+title: 'IS605 - Assignment #4'
+author: "J. Hamski"
+date: "September 19, 2015"
+output: html_document
+---
+##Problem Set 1
+```{r}
+A = matrix(c(1,2,3,-1,0,4), 2, 3)
+```
+We can do a lot with square matrices, particularly related to factorization. However, in linear algebra applications we don't always have square matrices for inputs, infact it is uncommon.  
+
+So, factorization using Singular Value Decomposition we create two square matrices from the input matrix calculating the matrix times its transpose in either possible order. 
+```{r}
+X <- A%*%t(A)
+Y <- t(A)%*%A
+```
+These resulting square matrices are symmetric and their eigenvectors can be orthonormal. 
+```{r}
+(eigen.X <- eigen(X))
+(eigen.Y <- eigen(Y))
+```
+Here, calculate the SVD using the built-in functon. 
+```{r}
+(svd.A <- svd(A))
+```
+Left singular values should be the same - however, it appears that there is a positive/negative switch in the upper right entry.  
+```{r}
+all.equal(svd.A$u, eigen.X$vectors)
+eigen.X$vectors
+svd.A$u
+eigen.X.adjusted<-eigen.X$vectors%*%matrix(c(1,0,0,-1), 2, 2)
+all.equal(svd.A$u, eigen.X.adjusted)
+```
+Right singular vectors are equal to the eignvectors of Y. 
+```{r}
+all.equal(svd.A$v, eigen.Y$vectors[,1:2]*(-1) )
+```
+The two non-zero eigenvalues of both X and Y are equal to the singular values of A that result from the SVD.
+```{r}
+all.equal(eigen.X$values, (svd.A$d)^2)
+all.equal(eigen.Y$values, (svd.A$d)^2)
+```
+
+##Problem Set 2
+Test matrix
+```{r}
+a <-matrix(c(1,0,2,2,0,2,1,0,0,1,0,1,1,2,1,4), 4, 4)
+```
+The main "myinverse" function calls two other custom functions:
+(1) a function "steps" that creates a matrix that guides the iterations through the matrix. (2) a function "cofactor.matrix" that eliminats the proper rows to create the cofactor matrices. The matrix output of "steps" is used by the apply function that calls "cofactor.matrix" from "myinverse" to iterate through the input matrix and find the determinants of each cofactor matrix. Finally, "myinverse" takes the list of cofactor determinants, creates a matrix, multiplies it by 1/det(input), and returns the transpose of this matrix. 
+
+```{r}
+#make (nrows^2) x 2 matrix that indicates how to iterate through the input matrix
+
+steps.func<-function(x){
+  matrix.size <-nrow(x)
+  steps.l <-1:matrix.size
+  steps.initial <- expand.grid(steps.l, steps.l)
+  steps <-steps.initial[,c(2,1)]
+  steps <- as.matrix(steps, nrow(x)^2)
+  return(steps)
+}
+
+#create cofactor matrices for each cofactor
+cofactor.matrix<-function(row, matrix){
+  #print(row)
+  cofactor.m<-matrix[-row[1],]
+  cofactor.m<-cofactor.m[,-row[2]]
+  #print(cofactor.m)
+  
+  #Note the nested ifelse functions to get the proper +/- sequence
+  cofactor.m<-det(cofactor.m)*ifelse(row[1]%%2,ifelse(row[2]%%2,1,-1),ifelse(row[2]%%2,-1,1))
+  return(cofactor.m)
+}
+
+myinverse <- function(matrix){
+  
+  det.fraction <- 1 / det(matrix)
+  steps<-steps.func(matrix)
+  cofactor.determinants <- apply(steps, 1, FUN=cofactor.matrix, matrix=matrix)
+  #print(cofactor.determinants)
+  cofac.det <- matrix(cofactor.determinants, nrow=nrow(matrix), byrow=TRUE)
+  inverse <- t(det.fraction * (cofac.det))
+  
+  return(inverse)
+}
+
+b<-(myinverse(a))
+
+```
+
+
+```{r}
+all.equal(b, solve(a))
+
+zapsmall(a%*%solve(a))
+```
+
+It takes almost 8 second to calculate the inverse of a square matrix with 99 dimensions - and even a bit longer when the calculation is performd during RMD rendering. 
+```{r}
+size <-99
+big <-matrix(sample(1:10,size^2, replace=T), nrow=size)
+start <- proc.time()
+km<-myinverse(big)
+proc.time() - start
+```
+
