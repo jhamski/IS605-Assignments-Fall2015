@@ -12,7 +12,24 @@ $$ f(x)= 2-x,1 < x \leq 2 $$
 
 That is, when your function is called, it will return a random variable between 0 and 2 that is distributed according to the above PDF.
 ```{r}
+sample.x = runif(20000,0,2)
+accept = c()
+fx <- function(x) {if (x >= 0 && x <= 2) {y <- ifelse(x <=1, x, 2-x)} else {y <- 0}}
 
+# dnorm(sample.x[i],0.5,0.175)
+for(i in 1:length(sample.x)){
+ U = runif(1, 0, 1)
+ if(dunif(sample.x[i], 0, 2)*3*U <= fx(sample.x[i])) {
+   accept[i] = 'Y'
+ }
+ else if(dunif(sample.x[i], 0, 2)*3*U > fx(sample.x[i])) {
+  accept[i] = 'N'
+ }
+}
+
+T = data.frame(sample.x, accept = factor(accept, levels= c('Y','N')))
+
+hist(T[,1][T$accept=='Y'], breaks = seq(0,2,0.02), freq = FALSE, main = 'Histogram of X', xlab = 'X')
 ```
 
 Now, write a function that will produce a sample of random variable that is distributed as follows:
