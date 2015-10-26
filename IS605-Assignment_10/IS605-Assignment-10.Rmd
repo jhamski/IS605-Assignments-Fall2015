@@ -1,0 +1,20 @@
+---
+title: "IS605-Assignment-10"
+author: "J. Hamski"
+date: "October 26, 2015"
+output: html_document
+---
+
+#Assignment #10 
+##IS605 Fundamentals of Computational Mathematics
+
+*Let’s use the 6 page universe that we had in the course notes. For this directed graph, perform the following calculations in R.*  
+*- Form the A matrix. Then, introduce decay and form the B matrix as we did in the course notes.*  
+*- Start with a uniform rank vector r and perform power iterations on B till conver- gence. That is, compute the solution r = Bn × r. Attempt this for a sufficiently large n so that r actually converges.*  
+*- Compute the eigen-decomposition of B and verify that you indeed get an eigenvalue of 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1.*  
+*- Use the igraph package in R and its page.rank method to compute the Page Rank of the graph as given in A. Note that you don’t need to apply decay. The package starts with a connected graph and applies decay internally. Verify that you do get the same PageRank vector as the two approaches above.*  
+
+```{r}
+
+```
+
