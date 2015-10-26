@@ -4,6 +4,10 @@ author: "J. Hamski"
 date: "October 22, 2015"
 output: html_document
 ---
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+set.seed(82453)
+```
 
 *First write a function that will produce a sample of random variable that is distributed as follows:*
 
@@ -11,29 +15,23 @@ $$ f(x)= x, 0 \leq x \leq 1$$
 $$ f(x)= 2-x,1 < x \leq 2 $$
 
 *That is, when your function is called, it will return a random variable between 0 and 2 that is distributed according to the above PDF.*
+
+For probability distribution no. 1, I use the bounding function as the probability constraint in the 'sampling' function, then apply over the values from 0 to 2 by 0.01. 
 ```{r}
-sample.x = runif(1000,0,2)
-accept = c()
-fx <- function(x) {if (x >= 0 && x <= 2) {y <- ifelse(x <=1, x, 2-x)} else {y <- 0}}
+fx.1 <- function(x) {if (x >= 0 && x <= 2) {y <- ifelse(x <=1, x, 2-x)} else {y <- 0}}
 
-# dnorm(sample.x[i],0.5,0.175)
-for(i in 1:length(sample.x)){
- U = runif(1, 0, 1)
- if(dunif(sample.x[i], 0, 2)*3*U <= fx(sample.x[i])) {
-   accept[i] = 'Y'
- }
- else if(dunif(sample.x[i], 0, 2)*3*U > fx(sample.x[i])) {
-  accept[i] = 'N'
- }
-}
+xgrid=seq(0,2,by=0.01)
+fxgrid <- sapply(xgrid,fx.1)
+T.1 <- sample(xgrid,1000,replace=TRUE,prob=fxgrid)
 
-T.1 = data.frame(sample.x, accept = factor(accept, levels= c('Y','N')))
+PDF.1 <- as.data.frame(T.1)
 ```
 
 *Now, write a function that will produce a sample of random variable that is distributed as follows:*
 $$f(x) = 1-x, 0 \leq x \leq 1$$
 $$f(x) = x-1, 1 \leq x \leq 2$$
 
+For probability distribution no. 2, I used the rejection sampling method to randomy sample from 0 to 2, the classify the values as either conforming (yes) or not conforming (no) to the probability distribution. 
 ```{r}
 sample.x = runif(1000,0,2)
 accept = c()
@@ -50,25 +48,42 @@ for(i in 1:length(sample.x)){
  }
 }
 
-T.2 = data.frame(sample.x, accept = factor(accept, levels= c('Y','N')))
+T.2 <- data.frame(sample.x, accept = factor(accept, levels= c('Y','N')))
+PDF.2 <- T.2[,1][T.2$accept=='Y']
+PDF.2 <- as.data.frame(PDF.2)
 ```
 
 
 *Draw 1000 samples (call your function 1000 times each) from each of the above two distributions and plot the resulting histograms. You should have one histogram for each PDF. See that it matches your understanding of these PDFs.*
 ```{r}
-hist(T.1[,1][T.1$accept=='Y'], breaks = seq(0,2,0.02), freq = FALSE, main = 'Histogram of T.1', xlab = 'X')
+hist(T.1, breaks = seq(0,2,0.02), freq = FALSE, main = 'Histogram of T.1', xlab = 'X')
 
 hist(T.2[,1][T.2$accept=='Y'], breaks = seq(0,2,0.02), freq = FALSE, main = 'Histogram of T.2', xlab = 'X')
 ```
 
 *Now, write a program that will take a sample set size n as a parameter and the PDF as the second parameter, and perform 1000 iterations where it samples from the PDF, each time taking n samples and computes the mean of these n samples. It then plots a histogram of these 1000 means that it computes.*
 ```{r}
+#set sample size
+n <- 20
 
+take.samples <- function(n, PDF){return(PDF[sample(nrow(PDF), n),])}
 
+sample.means.1 <- replicate(n=1000, expr=mean(take.samples(n, PDF.1)))
+sample.means.2 <- replicate(n=1000, expr=mean(take.samples(n, PDF.2)))
 ```
 
 *Verify that as you set n to something like 10 or 20, each of the two PDFs pro- duce normally distributed mean of samples, empirically verifying the Central Limit Theorem. Please play around with various values of n and you’ll see that even for reasonably small sample sizes such as 10, Central Limit Theorem holds.*
 ```{r}
+sample.means.1 <- as.data.frame(sample.means.1)
+sample.means.2 <- as.data.frame(sample.means.2)
 
+PDFs <- cbind (sample.means.1, sample.means.2)
+
+ggplot(data = PDFs) + geom_density(aes(x = sample.means.1), color = "red") + geom_density(aes(x = sample.means.2), color = "blue") + xlab("Value")
 ```
-
+  
+If we directly calculate the variance of the two distributions, it confirms that distribution 2 has a higher variance (more "spread" in the graph) than distribution 1. However, their means (the "peak of the histogram) are nearly the same. 
+```{r}
+var(PDF.1)
+var(PDF.2)
+```
