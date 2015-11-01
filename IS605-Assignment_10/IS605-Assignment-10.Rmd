@@ -5,16 +5,94 @@ date: "October 26, 2015"
 output: html_document
 ---
 
-#Assignment #10 
-##IS605 Fundamentals of Computational Mathematics
-
 *Let’s use the 6 page universe that we had in the course notes. For this directed graph, perform the following calculations in R.*  
-*- Form the A matrix. Then, introduce decay and form the B matrix as we did in the course notes.*  
+*- Form the A matrix. Then, introduce decay and form the B matrix as we did in the course notes.* 
+```{r}
+row.1 <- c(0,0,0.25,0,0,0)
+row.2 <- c(0.5,0,0.25,0,0,0)
+row.3 <- c(0.5,1,0,0,0,0.5)
+row.4 <- c(0,0,0,0,0.5,0.5)
+row.5 <- c(0,0,0.25,0.5,0,0)
+row.6 <- c(0,0,0.25,0.5,0.5,0)
+
+A <-as.matrix(rbind(row.1, row.2, row.3, row.4, row.5, row.6))
+
+B <- 0.85*A + 0.15/6
+
+#Check that the rowspace adds up to one
+sum(B[,4])
+```
+
 *- Start with a uniform rank vector r and perform power iterations on B till conver- gence. That is, compute the solution r = Bn × r. Attempt this for a sufficiently large n so that r actually converges.*  
-*- Compute the eigen-decomposition of B and verify that you indeed get an eigenvalue of 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1.*  
-*- Use the igraph package in R and its page.rank method to compute the Page Rank of the graph as given in A. Note that you don’t need to apply decay. The package starts with a connected graph and applies decay internally. Verify that you do get the same PageRank vector as the two approaches above.*  
+```{r}
+r <- rep(0.167, 6)
+
+n <- 10
+r.old <- r
+PageRanks <- matrix(r, nrow = 6, ncol = 1)
+
+for(i in 1:n){
+  r.new <- B %*% r.old
+  PageRanks <-cbind(PageRanks, r.new)
+  r.old <-r.new
+}
+
+PageRank.stable <- PageRanks[,11]
+```
+
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+require(reshape2)
+require(magrittr)
+```
+
 
 ```{r}
+iter <- seq(from=0, to = n, by = 1)
+
+PageRanks.plot <- PageRanks %>%
+  rbind(iter) %>%
+  melt(id.vars = "iter") %>%
+  subset(Var1 != "iter") 
+
+ggplot(PageRanks.plot, aes(x=Var2, y=value, colour=Var1)) + geom_line()
+```
+
+
+*- Compute the eigen-decomposition of B and verify that you indeed get an eigenvalue of 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1.* 
+```{r, warning=FALSE}
+eigen.B <- eigen(B)
+eigenvalues.B <- as.numeric(eigen.B$values)
+
+# All eigenvalues are less than 1? Yes:
+eigenvalues.B[eigenvalues.B >0.99]
+
+eigen.B$vectors
+
+adjusted.eigenvector<-as.numeric((1 / sum(eigen.B$vectors[,1])) * eigen.B$vectors[,1])
+
+#Same as obtained with power iteration method? Very, very close so yes:
+all.equal(adjusted.eigenvector, PageRank.stable)
+
+# Any negative? No:
+adjusted.eigenvector<0
+
+# Sums to one? Yes:
+sum(adjusted.eigenvector)
 
 ```
 
+*- Use the igraph package in R and its page.rank method to compute the Page Rank of the graph as given in A. Note that you don’t need to apply decay. The package starts with a connected graph and applies decay internally. Verify that you do get the same PageRank vector as the two approaches above.*  
+
+```{r, message=FALSE, warning=FALSE}
+require(igraph)
+```
+
+```{r}
+web.pages <- graph.formula(p.1--+p.2, p.2+-+p.3,p.1+-+p.3, p.3--+p.5, p.3+-+p.6, p.5--+p.6,p.5+-+p.4, p.4+-+p.6)
+(Page.Ranks.igraph<-page.rank(web.pages)$vector)
+
+all.equal(Page.Ranks.igraph, PageRank.stable)
+cbind(Page.Ranks.igraph, PageRank.stable)
+```
+It appears that 4, 5,and 6 are out of order! Even after double-checking my work I can't figure out what's causing this. 
