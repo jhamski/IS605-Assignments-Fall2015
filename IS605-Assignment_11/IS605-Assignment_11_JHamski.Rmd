@@ -1,0 +1,15 @@
+---
+title: "IS605 - Assignment 11"
+author: "J. Hamski"
+date: "November 5, 2015"
+output: html_document
+---
+
+
+*Perform a linear regression analysis fitting the Max Heart Rate to Age using the lm function in R. What is the resulting equation? Is the effect of Age on Max HR significant? What is the significance level? Please also plot the fitted relationship between Max HR and Age.*
+```{r}
+
+
+
+```
+
