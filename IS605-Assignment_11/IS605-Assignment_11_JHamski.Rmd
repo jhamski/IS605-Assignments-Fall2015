@@ -7,9 +7,96 @@ output: html_document
 
 
 *Perform a linear regression analysis fitting the Max Heart Rate to Age using the lm function in R. What is the resulting equation? Is the effect of Age on Max HR significant? What is the significance level? Please also plot the fitted relationship between Max HR and Age.*
-```{r}
-
-
-
+```{r, message=FALSE, echo=FALSE}
+require(ggplot2)
+require(readr)
 ```
+
+```{r, message=FALSE, echo=FALSE}
+JHT <-function(){
+  color.plot.area = "ivory"
+  color.background = "white"
+  color.grid.major = "black"
+  color.axis.text = "gray29"
+  color.axis.title = "gray29"
+  color.title = "gray29"
+
+  theme_bw(base_size=9) +
+    theme(panel.background=element_rect(fill=color.plot.area, color=color.plot.area)) +
+    theme(plot.background=element_rect(fill=color.background, color=color.background)) +
+    theme(panel.border=element_rect(color="gray20", size = 0.15)) +
+    theme(panel.grid.major=element_line(color=color.grid.major,size=.25, 
+                                        linetype = "longdash")) + 
+    theme(axis.line = element_line(color=color.grid.major, size = .5))+
+    theme(panel.grid.minor=element_blank()) +
+    theme(plot.title=element_text(color=color.title, size=10)) +
+    theme(axis.text.x=element_text(size=12,color=color.axis.text)) +
+    theme(axis.text.y=element_text(size=12,color=color.axis.text)) +
+    theme(axis.title.x=element_text(size=14,color=color.axis.title, face = "bold")) +
+    theme(axis.title.y=element_text(size=14,color=color.axis.title, face = "bold")) 
+}
+```
+
+First, setup a dataframe with the age and heart rate data. 
+```{r}
+age <- c(18, 23, 25, 35, 65, 54, 34, 56, 72, 19, 23, 42, 18, 39, 37)
+maxHR <- c(202, 186, 187, 180, 156, 169, 174, 172, 153, 199, 193, 174, 198, 183, 178)
+
+HR.data <- as.data.frame(cbind(age, maxHR))
+```
+
+Printing the results of the linear model function lm returns the line's coefficients. 
+```{r}
+# lm formula uses the order "response ~ terms" or "dependent variable ~ independent variable"
+(HR.model <- lm(maxHR ~ age, data = HR.data))
+```
+
+The resulting equation is:  
+
+$$ maxHR = -0.7977(age)+210.0485   $$  
+
+Looking at the rest of the model's information, we find that the relationship between age and max heart rate is signficant, with a p-value of 3.848e-08.This is less than the typical test level of 0.05 that the null hypothesis (no relationship between the two variables, $\beta$ = 0).
+```{r}
+summary(HR.model)
+
+0.05 > 3.848e-08
+```
+
+
+```{r}
+# note that the method="lm", so this plot is equivalent to the above 
+ggplot(data = HR.data, aes(x = age, y = maxHR)) +geom_point() + JHT()+ geom_smooth(method="lm", color="red", linetype=2) + geom_rug() + ggtitle("Scatterplot")
+```
+
+*Using the Auto data set from Assignment 5 (also attached here) perform a Linear Regression analysis using mpg as the dependent variable and the other 4 (displacement, horsepower, weight, acceleration) as independent variables. What is the final linear regression fit equation? Which of the 4 independent variables have a significant impact on mpg? What are their corresponding significance levels? What are the standard errors on each of the coefficients? Please perform this experiment in two ways. First take any random 40 data points from the entire auto data sample and perform the linear regression fit and measure the 95% confidence intervals. Then, take the entire data set (all 392 points) and perform linear regression and measure the 95% confidence intervals. Please report the resulting fit equation, their significance values and confidence intervals for each of the two runs.*
+
+```{r}
+col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
+cars <- read_csv(file="auto-mpg.csv", col_names=col.names)
+```
+
+First, perform the analysis with a sample. 
+```{r}
+cars.sample <- cars[sample(nrow(cars), 40), ]
+
+cars.sample.model <- lm(mpg ~ displacement + horsepower + weight + acceleration, data = cars.sample)
+```
+The resulting equation is:  
+
+$$mpg = (`r coefficients(cars.sample.model)[2]`)(displacement)+(`r coefficients(cars.sample.model)[3] `)(horsepower)+(`r coefficients(cars.sample.model)[4]`)(weight)+(`r coefficients(cars.sample.model)[5]`)(acceleration) + (`r round(coefficients(cars.sample.model)[1], digits=2)`)$$
+
+Which of the 4 independent variables have a significant impact on mpg? What are their corresponding significance levels? What are the standard errors on each of the coefficients? 
+```{r}
+summary(cars.sample.model)$coefficients
+```
+
+
+Next, perform the same analysis with the full dataset. 
+Linear regression analysis with mpg as the dependent variable, and displacement, horsepower, weight, and acceleration as independent variables. 
+```{r}
+cars.model <- lm(mpg ~ displacement + horsepower + weight + acceleration, data = cars)
+```
+The resulting equation is:  
+
+$$mpg = (`r coefficients(cars.model)[2]`)(displacement)+(`r coefficients(cars.model)[3] `)(horsepower)+(`r coefficients(cars.model)[4]`)(weight)+(`r coefficients(cars.model)[5]`)(acceleration) + (`r round(coefficients(cars.model)[1], digits=2)`)$$
 
