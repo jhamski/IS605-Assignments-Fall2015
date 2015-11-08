@@ -114,15 +114,99 @@ ggplot(data = HR.data, aes(x = age, y = maxHR)) +geom_point() + JHT()+ geom_smoo
 <pre class="r"><code>col.names = c(&quot;displacement&quot;, &quot;horsepower&quot;, &quot;weight&quot;, &quot;acceleration&quot;, &quot;mpg&quot;)
 cars &lt;- read_csv(file=&quot;auto-mpg.csv&quot;, col_names=col.names)</code></pre>
 <p>First, perform the analysis with a sample.</p>
-<pre class="r"><code>cars.sample &lt;- cars[sample(nrow(cars), 40), ]
+<pre class="r"><code>set.seed(924)
+cars.sample &lt;- cars[sample(nrow(cars), 40), ]
 
 cars.sample.model &lt;- lm(mpg ~ displacement + horsepower + weight + acceleration, data = cars.sample)</code></pre>
 <p>The resulting equation is:</p>
-<p><span class="math display">\[mpg = (0.0131031)(displacement)+(-0.0557014)(horsepower)+(-0.0070703)(weight)+(-0.1636575)(acceleration) + (50.46)\]</span></p>
-<p>Next, perform the same analysis with the full dataset. Linear regression analysis with mpg as the dependent variable, and displacement, horsepower, weight, and acceleration as independent variables.</p>
+<p><span class="math display">\[mpg = (-8\times 10^{-4})(displacement)+(-0.0479)(horsepower)+(-0.006)(weight)+(0.1489)(acceleration) + (45.26)\]</span></p>
+<p>Which of the 4 independent variables have a significant impact on mpg?</p>
+<pre class="r"><code>#True means significant impact with p &lt; 0.05. Otherwise, False.
+summary(cars.sample.model)$coefficients[2:5,4] &lt; 0.05</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+##        FALSE        FALSE         TRUE        FALSE</code></pre>
+<p>What are their corresponding significance levels?</p>
+<pre class="r"><code>summary(cars.sample.model)$coefficients[2:5,4]</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+##   0.97396888   0.37508361   0.00312783   0.69325010</code></pre>
+<p>What are the standard errors on each of the coefficients?</p>
+<pre class="r"><code>summary(cars.sample.model)$coefficients[2:5,2]</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+##  0.024288792  0.053332707  0.001900829  0.374401462</code></pre>
+<p>Next, perform the same analysis with the full dataset.</p>
+<p>Linear regression analysis with mpg as the dependent variable, and displacement, horsepower, weight, and acceleration as independent variables.</p>
 <pre class="r"><code>cars.model &lt;- lm(mpg ~ displacement + horsepower + weight + acceleration, data = cars)</code></pre>
 <p>The resulting equation is:</p>
-<p><span class="math display">\[mpg = (-0.0060009)(displacement)+(-0.0436077)(horsepower)+(-0.0052805)(weight)+(-0.023148)(acceleration) + (45.25)\]</span></p>
+<p><span class="math display">\[mpg = (-0.006)(displacement)+(-0.0436)(horsepower)+(-0.0053)(weight)+(-0.0231)(acceleration) + (45.25)\]</span></p>
+<p>Which of the 4 independent variables have a significant impact on mpg?</p>
+<pre class="r"><code>#True means significant impact with p &lt; 0.05. Otherwise, False.
+summary(cars.model)$coefficients[2:5,4] &lt; 0.05</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+##        FALSE         TRUE         TRUE        FALSE</code></pre>
+<p>What are their corresponding significance levels?</p>
+<pre class="r"><code>summary(cars.model)$coefficients[2:5,4]</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+## 3.716584e-01 8.848982e-03 2.302545e-10 8.538765e-01</code></pre>
+<p>What are the standard errors on each of the coefficients?</p>
+<pre class="r"><code>summary(cars.model)$coefficients[2:5,2]</code></pre>
+<pre><code>## displacement   horsepower       weight acceleration 
+## 0.0067093055 0.0165734633 0.0008108541 0.1256011622</code></pre>
+<p>Viewing these results in a table shows that the full dataset indicates that both horsepower and</p>
+<pre class="r"><code>table.cols &lt;- c(&quot;Sample Significance Values&quot;, &quot;Sample Variable Significance&quot;, &quot;Sample Standard Errors&quot;, &quot;Full Dataset Significance Values&quot;, &quot;Full Dataset Variable Signficance&quot;, &quot;Full Dataset Standard Errors&quot;)
+lm.results &lt;-as.data.frame(cbind(summary(cars.sample.model)$coefficients[2:5,4], summary(cars.sample.model)$coefficients[2:5,4] &lt; 0.05, summary(cars.sample.model)$coefficients[2:5,2], summary(cars.model)$coefficients[2:5,4], summary(cars.model)$coefficients[2:5,4] &lt; 0.05, summary(cars.model)$coefficients[2:5,2]))
+
+kable(lm.results, col.names=table.cols)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Sample Significance Values</th>
+<th align="right">Sample Variable Significance</th>
+<th align="right">Sample Standard Errors</th>
+<th align="right">Full Dataset Significance Values</th>
+<th align="right">Full Dataset Variable Signficance</th>
+<th align="right">Full Dataset Standard Errors</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">displacement</td>
+<td align="right">0.9739689</td>
+<td align="right">0</td>
+<td align="right">0.0242888</td>
+<td align="right">0.3716584</td>
+<td align="right">0</td>
+<td align="right">0.0067093</td>
+</tr>
+<tr class="even">
+<td align="left">horsepower</td>
+<td align="right">0.3750836</td>
+<td align="right">0</td>
+<td align="right">0.0533327</td>
+<td align="right">0.0088490</td>
+<td align="right">1</td>
+<td align="right">0.0165735</td>
+</tr>
+<tr class="odd">
+<td align="left">weight</td>
+<td align="right">0.0031278</td>
+<td align="right">1</td>
+<td align="right">0.0019008</td>
+<td align="right">0.0000000</td>
+<td align="right">1</td>
+<td align="right">0.0008109</td>
+</tr>
+<tr class="even">
+<td align="left">acceleration</td>
+<td align="right">0.6932501</td>
+<td align="right">0</td>
+<td align="right">0.3744015</td>
+<td align="right">0.8538765</td>
+<td align="right">0</td>
+<td align="right">0.1256012</td>
+</tr>
+</tbody>
+</table>
 
 
 </div>
