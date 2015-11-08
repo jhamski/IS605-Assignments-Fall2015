@@ -87,21 +87,21 @@ The resulting equation is:
 
 $$mpg = (`r round(coefficients(cars.sample.model)[2],digits=4)`)(displacement)+(`r round(coefficients(cars.sample.model)[3], digits=4) `)(horsepower)+(`r round(coefficients(cars.sample.model)[4], digits=4)`)(weight)+(`r round(coefficients(cars.sample.model)[5], digits=4)`)(acceleration) + (`r round(coefficients(cars.sample.model)[1], digits=2)`)$$
 
-Which of the 4 independent variables have a significant impact on mpg? 
+*Which of the 4 independent variables have a significant impact on mpg?*
 ```{r}
 #True means significant impact with p < 0.05. Otherwise, False.
 summary(cars.sample.model)$coefficients[2:5,4] < 0.05
 ```
-What are their corresponding significance levels?
+*What are their corresponding significance levels?*
 ```{r}
 summary(cars.sample.model)$coefficients[2:5,4]
 ```
-What are the standard errors on each of the coefficients? 
+*What are the standard errors on each of the coefficients?* 
 ```{r}
 summary(cars.sample.model)$coefficients[2:5,2]
 ```
 
-Next, perform the same analysis with the full dataset. 
+*Next, perform the same analysis with the full dataset.* 
 
 Linear regression analysis with mpg as the dependent variable, and displacement, horsepower, weight, and acceleration as independent variables. 
 ```{r}
@@ -111,16 +111,16 @@ The resulting equation is:
 
 $$mpg = (`r round(coefficients(cars.model)[2], digits=4)`)(displacement)+(`r round(coefficients(cars.model)[3], digits=4) `)(horsepower)+(`r round(coefficients(cars.model)[4], digits=4)`)(weight)+(`r round(coefficients(cars.model)[5], digits=4)`)(acceleration) + (`r round(coefficients(cars.model)[1], digits=2)`)$$  
 
-Which of the 4 independent variables have a significant impact on mpg? 
+*Which of the 4 independent variables have a significant impact on mpg?*
 ```{r}
 #True means significant impact with p < 0.05. Otherwise, False.
 summary(cars.model)$coefficients[2:5,4] < 0.05
 ```
-What are their corresponding significance levels?
+*What are their corresponding significance levels?*
 ```{r}
 summary(cars.model)$coefficients[2:5,4]
 ```
-What are the standard errors on each of the coefficients? 
+*What are the standard errors on each of the coefficients?* 
 ```{r}
 summary(cars.model)$coefficients[2:5,2]
 ```
