@@ -1,0 +1,23 @@
+---
+title: "IS605-Assignment-12"
+author: "J. Hamski"
+date: "November 14, 2015"
+output: html_document
+---
+
+##IS605 -- ASSIGNMENT 12 -- BIAS VARIANCE TRADEOFF IN R
+
+```{r}
+require(stats)
+require(boot)
+require(readr)
+```
+
+
+```{r}
+col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
+cars <- read_csv(file="auto-mpg.csv", col_names=col.names)
+```
+
+
+
