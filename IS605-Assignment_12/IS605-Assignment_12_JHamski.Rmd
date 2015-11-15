@@ -5,7 +5,7 @@ date: "November 14, 2015"
 output: html_document
 ---
 
-##IS605 -- ASSIGNMENT 12 -- BIAS VARIANCE TRADEOFF IN R
+##BIAS VARIANCE TRADEOFF IN R
 
 ```{r, message=FALSE, warning=FALSE}
 require(stats)
@@ -54,24 +54,28 @@ cv.err <- rbind(cv.err.1, cv.err.2,cv.err.3,cv.err.4,cv.err.5,cv.err.6,cv.err.7,
 plot(x = 1:10, cv.err, type='b')
 ```
 
-
+A better implementation:
 
 ```{r}
-poly.fit <-function(degree){
+fit.cv <-function(degree){
+  
   glm.fit <- glm(mpg~poly(displacement+horsepower+weight+acceleration,degree), data=cars)
-  return(glm.fit)}
+  cv.error <- cv.glm(cars, glm.fit, K=5)$delta[1]
+  return(cv.error)}
 
-max.degree = 8
+max.degree = 10
 
-glm.fit.all <- sapply(1:max.degree, FUN=poly.fit)
+glm.fit.all <- mapply(1:max.degree, FUN=fit.cv)
+plot(glm.fit.all, type='b')
 ```
 
-
+I noticed there is a large variation in the prediction errors depending on the random sampling that happens during cross-validation. I had to try a few values for set.seed before it showed the expected U-shape. Therefore, it makes sense to run many iterations of the cross-validation process and view the results. This confirms that the bias-variance tradeoff is observed in the prediction errors resulting from polynomial models of varying degrees. 
 ```{r}
-cross.validate <- function(models){
-  print(models)
-  cv.err <- cv.glm(cars, models, K=5)$delta
-  #print(cv.err)
-  }
+get.cv.errors <- function(){mapply(1:max.degree, FUN=fit.cv)}
+
+# note this is a bit slow
+a <- replicate(50, exp=get.cv.errors())
+
+boxplot.matrix(a, use.cols=FALSE)
 ```
 
