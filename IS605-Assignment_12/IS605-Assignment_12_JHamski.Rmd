@@ -19,5 +19,74 @@ col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
 cars <- read_csv(file="auto-mpg.csv", col_names=col.names)
 ```
 
+```{r}
+glm.fit.1 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,1), data=cars)
+glm.fit.2 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,2), data=cars)
+glm.fit.3 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,3), data=cars)
+glm.fit.4 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,4), data=cars)
+glm.fit.5 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,5), data=cars)
+glm.fit.6 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,6), data=cars)
+glm.fit.7 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,7), data=cars)
+glm.fit.8 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,8), data=cars)
+
+```
+
+
+```{r}
+cv.err.1 <- cv.glm(cars,glm.fit.1,K=5)$delta[1]
+cv.err.2 <- cv.glm(cars,glm.fit.2,K=5)$delta[1]
+cv.err.3 <- cv.glm(cars,glm.fit.3,K=5)$delta[1]
+cv.err.4 <- cv.glm(cars,glm.fit.4,K=5)$delta[1]
+cv.err.5 <- cv.glm(cars,glm.fit.5,K=5)$delta[1]
+cv.err.6 <- cv.glm(cars,glm.fit.6,K=5)$delta[1]
+cv.err.7 <- cv.glm(cars,glm.fit.7,K=5)$delta[1]
+cv.err.8 <- cv.glm(cars,glm.fit.8,K=5)$delta[1]
+
+cv.err <- rbind(cv.err.1, cv.err.2,cv.err.3,cv.err.4,cv.err.5,cv.err.6,cv.err.7,cv.err.8)
+```
+
+```{r}
+plot(x = 1:8, cv.err)
+```
+
+
+
+```{r}
+poly.fit <-function(degree){
+  glm.fit <- glm(mpg~poly(displacement+horsepower+weight+acceleration,degree), data=cars)
+  return(glm.fit)}
+
+max.degree = 8
+
+glm.fit.all <- sapply(1:max.degree, FUN=poly.fit)
+```
+
+
+```{r}
+
+cross.validate <- function(models){
+  print(models)
+  cv.err <- cv.glm(cars, models, K=5)$delta
+  #print(cv.err)
+  }
+
+sapply(glm.fit.all, FUN=cross.validate)
+
+
+cross.validate(glm.fit.all[[1]])
+
+cv.err<- cv.glm(cars, glm.fit)$delta
+
+cv.err5[1] <- cv.glm(cars,glm.fit.1,K=5)$delta[1]
+cv.err5[2] <- cv.glm(cars,glm.fit.2,K=5)$delta[1]
+
+```
+
+
+
+```{r}
+degree=1:2
+plot(degree,cv.err5,type='b')
+```
 
 
