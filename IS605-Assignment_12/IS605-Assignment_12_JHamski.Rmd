@@ -7,7 +7,7 @@ output: html_document
 
 ##IS605 -- ASSIGNMENT 12 -- BIAS VARIANCE TRADEOFF IN R
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 require(stats)
 require(boot)
 require(readr)
@@ -28,11 +28,13 @@ glm.fit.5 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,5), data=c
 glm.fit.6 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,6), data=cars)
 glm.fit.7 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,7), data=cars)
 glm.fit.8 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,8), data=cars)
-
+glm.fit.9 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,9), data=cars)
+glm.fit.10 <- glm(mpg~poly(displacement+horsepower+weight+acceleration,10), data=cars)
 ```
 
 
 ```{r}
+set.seed(284)
 cv.err.1 <- cv.glm(cars,glm.fit.1,K=5)$delta[1]
 cv.err.2 <- cv.glm(cars,glm.fit.2,K=5)$delta[1]
 cv.err.3 <- cv.glm(cars,glm.fit.3,K=5)$delta[1]
@@ -41,12 +43,15 @@ cv.err.5 <- cv.glm(cars,glm.fit.5,K=5)$delta[1]
 cv.err.6 <- cv.glm(cars,glm.fit.6,K=5)$delta[1]
 cv.err.7 <- cv.glm(cars,glm.fit.7,K=5)$delta[1]
 cv.err.8 <- cv.glm(cars,glm.fit.8,K=5)$delta[1]
+cv.err.9 <- cv.glm(cars,glm.fit.9,K=5)$delta[1]
+cv.err.10 <- cv.glm(cars,glm.fit.10,K=5)$delta[1]
 
-cv.err <- rbind(cv.err.1, cv.err.2,cv.err.3,cv.err.4,cv.err.5,cv.err.6,cv.err.7,cv.err.8)
+
+cv.err <- rbind(cv.err.1, cv.err.2,cv.err.3,cv.err.4,cv.err.5,cv.err.6,cv.err.7,cv.err.8, cv.err.9, cv.err.10)
 ```
 
 ```{r}
-plot(x = 1:8, cv.err)
+plot(x = 1:10, cv.err, type='b')
 ```
 
 
@@ -63,30 +68,10 @@ glm.fit.all <- sapply(1:max.degree, FUN=poly.fit)
 
 
 ```{r}
-
 cross.validate <- function(models){
   print(models)
   cv.err <- cv.glm(cars, models, K=5)$delta
   #print(cv.err)
   }
-
-sapply(glm.fit.all, FUN=cross.validate)
-
-
-cross.validate(glm.fit.all[[1]])
-
-cv.err<- cv.glm(cars, glm.fit)$delta
-
-cv.err5[1] <- cv.glm(cars,glm.fit.1,K=5)$delta[1]
-cv.err5[2] <- cv.glm(cars,glm.fit.2,K=5)$delta[1]
-
 ```
-
-
-
-```{r}
-degree=1:2
-plot(degree,cv.err5,type='b')
-```
-
 
