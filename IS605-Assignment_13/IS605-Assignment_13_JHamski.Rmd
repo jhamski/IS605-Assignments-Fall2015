@@ -1,0 +1,38 @@
+---
+title: "IS605—Assignment-13"
+author: "J. Hamski"
+date: "November 21, 2015"
+output: html_document
+---
+
+*Write a program to compute the derivative of f(x) = x3 + 2x^2 at any value of x. Your function should take in a value of x and return back an approximation to the derivative of f(x) evaluated at that value. You should not use the analytical form of the derivative to compute it. Instead, you should compute this approximation using limits.*
+
+```{r}
+limit.deriv <- function(x, h){
+  f.x <- (x**3)+(2*(x**2))
+  f.x.h <-((x+h)**3)+(2*((x+h)**2))
+  return((f.x.h - f.x)/h)
+}
+
+limit.deriv(3,0.000000001) #should equal 39
+```
+# .Machine$double.eps is the smallest floating point number that may be used on the machine running this script
+```{r }
+iterations = 10000
+h.list <- seq(from=0.01, to=.Machine$double.eps*10, length.out=iterations)
+derivatives <-NULL
+
+for(i in h.list){
+  derivatives <-c(derivatives, limit.deriv(3, i))
+}
+
+plot(derivatives, ylim=c(38.99,39.01), type='l')
+```
+
+*Now, write a program to compute the area under the curve for the function 3x2 + 4x in the range x = [1, 3]. You should first split the range into many small intervals using some really small ∆x value (say 1e-6) and then compute the approximation to the area under the curve.*
+
+```{r}
+
+```
+
+
