@@ -16,23 +16,88 @@ limit.deriv <- function(x, h){
 
 limit.deriv(3,0.000000001) #should equal 39
 ```
-# .Machine$double.eps is the smallest floating point number that may be used on the machine running this script
-```{r }
-iterations = 10000
-h.list <- seq(from=0.01, to=.Machine$double.eps*10, length.out=iterations)
-derivatives <-NULL
-
-for(i in h.list){
-  derivatives <-c(derivatives, limit.deriv(3, i))
-}
-
-plot(derivatives, ylim=c(38.99,39.01), type='l')
-```
 
 *Now, write a program to compute the area under the curve for the function 3x2 + 4x in the range x = [1, 3]. You should first split the range into many small intervals using some really small ∆x value (say 1e-6) and then compute the approximation to the area under the curve.*
 
 ```{r}
+range.low = 1
+range.high = 3
+step = 1e-6
 
+#note that you shouldn't include the area for the lower range, so intervals start at low.range plus one step
+intervals <- seq(from=range.low+step, to=range.high, by=step)
+
+curve.function <- function(x){
+  height <- (3*(x**2))+4*x
+  width <- step
+  return(height*width)
+}
+
+areas <-lapply(intervals, FUN=curve.function)
+(sum(unlist(areas))) #should equal 42
 ```
 
+---
+title: "KM"
+author: "J. Hamski"
+date: "November 22, 2015"
+output: html_document
+---
 
+### Analytical Problem 1
+$$\int\sin(x)\cos(x)$$ 
+
+$$\int udv = uv - \int vdu$$
+$$\int\sin(x)\cos(x) = uv - \int vdu$$
+
+
+$$u = \sin(x)$$
+$$du=\cos(x)$$
+
+$$dv=\cos(x)$$
+$$v=\sin(x)$$
+
+
+$$= \sin(x)\sin(x) - \int\sin(x)\cos(x)$$
+$$+\int\sin(x)\cos(x)$$
+$$2\int\sin(x)\cos(x) = \sin^2(x)$$
+$$\int\sin(x)\cos(x) = \frac{\sin^2(x)}{2}$$
+
+### Analytical Problem 2
+
+$$\int udv = uv - \int vdu$$
+$$\int x^2e^2 = uv - \int vdu$$
+$$u = x^2$$
+$$du = 2x$$
+$$dv = e^x$$
+$$v = e^x$$
+
+$$\int x^2e^x = x^2e^x - \int e^x2x$$
+$$\int x^2e^x = x^2e^x - 2\int xe^x$$
+
+Take $\int xe^x$ and perform integration by parts again:
+
+$$u = x$$
+$$du = 1$$
+$$dv = e^x$$
+$$v = e^x$$
+
+$$\int xe^x = xe^x - \int e^x$$
+$$\int xe^x = xe^x - e^x$$
+
+Subsitute $xe^x - e^x$ back into the above equation to yield:
+$$\int x^2e^x = x^2e^x - 2(xe^x - e^x)$$
+$$\int x^2e^x = x^2e^x - 2xe^x + 2e^x$$
+$$\int x^2e^x = (x^2-2x+2)e^x$$
+
+### Analytical Problem 3
+
+$$\frac{d}{dx} x\cos(x)= \frac{d}{dx}x \cdot \cos(x) + x \cdot \frac{d}{dx}\cos(x)$$
+$$= 1\cdot \cos(x)+x\cdot(-\sin(x))$$
+$$= \cos(x)-x\sin(x)$$
+
+### Analytical Problem 4
+
+$$\frac{d}{dx}(e^x)^4=(e^x)^4 \cdot \frac{d}{dx}x^4$$
+
+$$=((e^x)^4)(4x^3)$$
