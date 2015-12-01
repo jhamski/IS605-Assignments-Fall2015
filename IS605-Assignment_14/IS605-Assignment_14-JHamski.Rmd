@@ -1,0 +1,42 @@
+---
+title: "IS605-Assignment-14"
+author: "J. Hamski"
+date: "November 29, 2015"
+output: html_document
+---
+
+**Find the Taylor Series expansions of these popular functions**
+
+### Function 1
+
+$$ f(x) = \frac{1}{(1-x)}$$
+
+Taylor Series:
+
+$$ \sum_{n=0}^{\infty}x^n = 1+x+x^2+x^3+x^4+\cdot \cdot \cdot $$
+
+for 
+$$ -1 < x < 1 $$
+
+### Function 2
+
+$$ f(x) = e^x $$
+
+Taylor Series:
+
+$$ \sum_{n=0}^{\infty}\frac{x^n}{n!} = 1+x+\frac{x^2}{2!}+\frac{x^3}{3!}+\frac{x^4}{4!}+\cdot\cdot\cdot $$
+
+For   
+$$ -\infty < x < \infty $$  
+
+### Function 3
+  
+$$ f(x) = ln(1+x) $$
+
+Taylor Series:
+
+$$ \sum_{n=0}^{\infty}\frac{(-1)^n-1}{n}x^n = x - \frac{x^2}{2}+\frac{x^3}{3}-\frac{x^4}{4}+\cdot\cdot\cdot $$
+
+For  
+
+$$−1 < x ≤ 1 $$
