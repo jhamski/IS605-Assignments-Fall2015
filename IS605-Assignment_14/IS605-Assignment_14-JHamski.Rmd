@@ -11,6 +11,18 @@ output: html_document
 
 $$ f(x) = \frac{1}{(1-x)}$$
 
+Assume $f(x)$ has power series form:
+$$ f(x) = \sum_{n=0}^{\infty}c_n(x-a)^n=c_0+c_1(x-a)+c_2(x-a)^2+c_3)x-a)^3+c_4(x-a)^4+\cdot\cdot\cdot $$
+$$ f(a)=c_0 $$
+$$ f'(x)=c_1+2c_2(x-a)+3c_3(x-a)^2+4c_4(x-4)^3+\cdot\cdot\cdot $$
+$$ f'(a)=c_1$$
+$$ f''(x)=2c_2+3(2)c_3(x-a)+4(3)c_4(x-a)^2+\cdot\cdot\cdot $$
+$$ c_2 = \frac{f''(a)}{c_2} $$
+$$ f'''(x)=3(2)c_3(x-a)+4(3)(2)c_4(x-a)+\cdot\cdot\cdot $$
+$$ c_3 = \frac{f'''(a)}{3(2)} $$
+$$ c_n = \frac{f^(n)(a)}{n!}$$
+
+
 Taylor Series:
 
 $$ \sum_{n=0}^{\infty}x^n = 1+x+x^2+x^3+x^4+\cdot \cdot \cdot $$
