@@ -4,6 +4,10 @@ author: "James Hamski"
 date: "December 19, 2015"
 output: html_document
 ---
+```{r}
+require(readr)
+
+```
 
 # Section 1 - Review
 1)  
@@ -81,7 +85,14 @@ t(A) =
 \end{bmatrix}
 $$
 
-3)  
+
+3)
+  
+First, understand what a basis is. A basis is a set of vectors that allows the expression of any vector in the vector space through linear combination, and are linearly independent. My  mental model for this is to think of an arm painting a wall ($R^2$) that can move along the X and Y axes - combining different magnitudes in X and Y allows you to paint the entire wall (i.e. create any vector in the vector space).
+
+An orthonormal basis is a basis by the definition above, with the additional constraint that they are normal unit length (i.e. 1) and orthoganal - meaning their inner product is 0 (they are all perpendicular to eachother). 
+
+The orthonormal basis of $R^3$ are (0,0,1), (0,1,0), and (1,0,0). These are mutually perpendicular, normal, and may be combined to create any vector in $R^3$. 
 
 
 
@@ -98,10 +109,32 @@ According to the Central Limit Theorem, we can say that these averages will be n
 ```
 
 # Section 2 - Mini-coding Assignments
-
+2.1)  
 ```{r}
+binom <- function(int){
+  prob<-choose(20, int)*(0.25^int)*(0.75^(20-int))
+  return(prob)
+}
+integers <- seq(from=0, to=20, by=1)
+
+binom.freq <- sapply(integers, FUN=binom)
+plot(binom.freq)
+
 
 ```
+
+2.2)  
+```{r}
+#note I opted to open the data in Excel and save with commas as delineators. 
+col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
+auto <- read_csv(file="auto-mpg.csv", col_names=col.names)
+
+#From the help file: Performs a principal components analysis on the given data matrix and returns the results as an object of class prcomp...The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. 
+pc <- prcomp(auto, center=T)
+print(pc)
+```
+
+
 
 
 # Section 3 - Mini-project 
