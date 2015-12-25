@@ -126,14 +126,38 @@ According to the Central Limit Theorem, we can say that these averages will be n
 # Section 2 - Mini-coding Assignments
 2.1)  
 ```{r}
+#First, directly calculate the probability mass function:
 binom <- function(int){
   prob<-choose(20, int)*(0.25^int)*(0.75^(20-int))
-  return(prob)
-}
+  return(prob)}
+
 integers <- seq(from=0, to=20, by=1)
 
 binom.freq <- sapply(integers, FUN=binom)
-plot(binom.freq)
+plot(binom.freq, type="s")
+```
+
+```{r}
+iterations <- 1000
+#sample from the probabilities specified by the PMF
+
+PMF.simulation <- sample(x = integers, size=iterations, replace = T, prob = binom.freq)
+hist(PMF.simulation)
+```
+
+```{r}
+simulated.prob<-table(PMF.simulation)/iterations
+print(simulated.prob)
+```
+
+```{r}
+#note indexing in table and direct calculation with binom function means 6 vs 5 here, X==5 is being calculated either way
+all.equal(simulated.prob[6], binom(5))
+```
+
+Higher values for X==k are so improbable they do not turn up in the sampling of 1000 numbers, i.e.:
+```{r}
+binom(20)
 ```
 
 2.2)  
@@ -145,24 +169,64 @@ auto <- read_csv(file="auto-mpg.csv", col_names=col.names)
 #From the help file: Performs a principal components analysis on the given data matrix and returns the results as an object of class prcomp...The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. 
 pc <- prcomp(auto, center=T)
 print(pc)
+
+plot(x=auto$mpg, y=auto$displacement)
+
+#auto %*% pc$rotation
 ```
 
 
+```{r}
+auto.svd <- svd(auto)
+
+```
+
+```{r}
+# perform principal components analysis
+pca <- prcomp(auto) 
+
+# project new data onto the PCA space
+scale(auto, pca$center, pca$scale) %*% pca$rotation 
+
+```
+
+
+
 2.3)  
+Probability of drawing an item from uniform distribution: $\frac{1}{n}$  
+Prob. of not drawing an item: $1-\frac{1}{n}$  
+Prob of not drawing for sample size n: $(1-\frac{1}{n})^n$  
+The probability of an item not being chosen:  
+$$\lim_{x\to\infty} (1-\frac{1}{n})^n =$$
+
+$$y=(1-\frac{1}{n})^n$$
+$$ln(y)=ln(1-\frac{1}{n})^n$$
+$$ln(y)=n*ln(1-\frac{1}{n})$$
+$$ln(y)=-n(\frac{1}{n}+\frac{1/n^2}{2}+\frac{1/n^3}{3}+\cdot\cdot\cdot)$$
+$$ln(y)=-1-\frac{1/n}{2}-\frac{1/n^2}{3}-\cdot\cdot\cdot$$
+$$y=e^{-1-\frac{1/n}{2}-\frac{1/n^2}{3}-\cdot\cdot\cdot}$$
+$$y=e^{-1}\cdot e^{\frac{1/n}{2}-\frac{1/n^2}{3}-\cdot\cdot\cdot}$$
+$$\lim_{x\to\infty} (1-\frac{1}{n})^n = e^{-1}\cdot \lim_{x\to\infty} e^{\frac{1/n}{2}-\frac{1/n^2}{3}-\cdot\cdot\cdot}$$
+$$= e^{-1}\cdot e^{0}$$
+$$= \frac{1}{e}$$
+$$\approx 0.368$$
+Probability of an item being chosen:
+$$1-0.368 \approx 0.632$$
+
+
 ```{r}
 n = 100
 toy.data <- rnorm(n, 0)
 
-bootstrap <- replicate(100, expr=sample(toy.data, size=n, replace = T))
+repeats<-NULL
+iterations <- 10000
 
-
-
-for(i in 1:100){
+for(i in 1:iterations){
   bootstrap <-sample(toy.data, size=n, replace = T)
-  intersect <-length(intersect(bootstrap,toy.data))
-  print(intersect)
-}
+  common <-length(intersect(bootstrap,toy.data))
+  repeats <- c(repeats, common)}
 
+mean(repeats)
 ```
 
 
