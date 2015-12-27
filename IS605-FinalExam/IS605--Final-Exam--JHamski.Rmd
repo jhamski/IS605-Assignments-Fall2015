@@ -115,9 +115,25 @@ Eig.Space <- (e.mat - a)
 
 7)  *Assuming that we are repeatedly sampling sets of numbers (each set is of size n) from an unknown probability density function. What can we say about the average value of each set?*
 
-According to the Central Limit Theorem, we can say that these averages will be normal (Gaussian) distributed
+According to the Central Limit Theorem, we can say that these averages will be normally (Gaussian) distributed.
 
+8) 
+$$ \frac{d}{dx}e^x cos^2(x) = $$
+$$= \frac{d}{dx}e^x\cdot cos^2(x)+e^x \cdot \frac{d}{dx}cos^2(x)$$
+$$=e^x cos^2(x) + 2 cos(x) \cdot \frac{d}{dx}[cos(x)] e^x $$
+$$=e^x cos^2(x) + 2(-sin(x))e^xcos(x)$$
+$$=e^x cos^2(x) - 2e^xcos(x)sin(x)$$
 
+9) 
+
+$$ \frac{d}{dx}e^{x^3} = $$
+$$ = e^{x^3}\cdot \frac{d}{dx}x^3 $$
+$$ = 3x^2e^{x^3} $$
+
+10) 
+$$ \int (e^xcos(x)+sin(x))dx = \frac{e^x}{2}(sin(x)+cos(x))-cos(x)+C $$
+
+Using: integration by parts and integral of sine rules. 
 
 ```{r}
 
@@ -149,10 +165,9 @@ hist(PMF.simulation)
 simulated.prob<-table(PMF.simulation)/iterations
 print(simulated.prob)
 ```
-
+Compare simulation results above to a directly calculated probability. 
 ```{r}
-#note indexing in table and direct calculation with binom function means 6 vs 5 here, X==5 is being calculated either way
-all.equal(simulated.prob[6], binom(5))
+binom(5)
 ```
 
 Higher values for X==k are so improbable they do not turn up in the sampling of 1000 numbers, i.e.:
@@ -177,17 +192,20 @@ plot(x=auto$mpg, y=auto$displacement)
 
 
 ```{r}
-auto.svd <- svd(auto)
-
+auto.svd <- svd(auto[2:5])
 ```
 
 ```{r}
+plot(auto$mpg, auto.svd$u[, 1])
+```
+
+
+
+```{r}
 # perform principal components analysis
-pca <- prcomp(auto) 
+pca <- prcomp( ~ mpg + displacement + horsepower + weight + acceleration, data = auto, scale=TRUE) 
 
-# project new data onto the PCA space
-scale(auto, pca$center, pca$scale) %*% pca$rotation 
-
+plot(pca$x)
 ```
 
 
