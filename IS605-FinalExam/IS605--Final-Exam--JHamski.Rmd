@@ -4,7 +4,7 @@ author: "James Hamski"
 date: "December 19, 2015"
 output: html_document
 ---
-```{r}
+```{r, message=FALSE, warning=FALSE}
 require(readr)
 
 ```
@@ -90,7 +90,7 @@ $$
   
 First, understand what a basis is. A basis is a set of vectors that allows the expression of any vector in the vector space through linear combination, and are linearly independent. My  mental model for this is to think of an arm painting a wall ($R^2$) that can move along the X and Y axes - combining different magnitudes in X and Y allows you to paint the entire wall (i.e. create any vector in the vector space).
 
-An orthonormal basis is a basis by the definition above, with the additional constraint that they are normal unit length (i.e. 1) and orthoganal - meaning their inner product is 0 (they are all perpendicular to eachother). 
+An orthonormal basis is a basis by the definition above, with the additional constraint that they are normal unit length (i.e. 1) and orthogonal - meaning their inner product is 0 (they are all perpendicular to eachother). 
 
 The orthonormal basis of $R^3$ are (0,0,1), (0,1,0), and (1,0,0). These are mutually perpendicular, normal, and may be combined to create any vector in $R^3$. 
 
@@ -105,13 +105,11 @@ print(eigenvalues)
 
 ```{r}
 a <- matrix(c(5,0,3,0,1,-2,1,2,0), nrow=3, byrow=T)
-e.mat <- matrix(c(eigenvalues[1], 0, 0, 0, eigenvalues[1], 0, 0, 0,eigenvalues[1]), nrow=3, byrow=T)
-Eig.Space <- (e.mat - a)
-
-
+eigen.a <- eigen(a)
+eigen.a$vectors
 ```
 
-
+6) The likelihood that a person randomly clicking links will land on any particular page may be calculated by using the PageRank algorithm on the stochastic matrix. 
 
 7)  *Assuming that we are repeatedly sampling sets of numbers (each set is of size n) from an unknown probability density function. What can we say about the average value of each set?*
 
@@ -134,10 +132,6 @@ $$ = 3x^2e^{x^3} $$
 $$ \int (e^xcos(x)+sin(x))dx = \frac{e^x}{2}(sin(x)+cos(x))-cos(x)+C $$
 
 Using: integration by parts and integral of sine rules. 
-
-```{r}
-
-```
 
 # Section 2 - Mini-coding Assignments
 2.1)  
@@ -179,35 +173,40 @@ binom(20)
 ```{r}
 #note I opted to open the data in Excel and save with commas as delineators. 
 col.names = c("displacement", "horsepower", "weight", "acceleration", "mpg")
-auto <- read_csv(file="auto-mpg.csv", col_names=col.names)
+auto.data <- read_csv(file="auto-mpg.csv", col_names=col.names)
 
-#From the help file: Performs a principal components analysis on the given data matrix and returns the results as an object of class prcomp...The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. 
-pc <- prcomp(auto, center=T)
-print(pc)
+auto.data <- scale(auto.data)
 
-plot(x=auto$mpg, y=auto$displacement)
-
-#auto %*% pc$rotation
+svd.auto <- svd(auto.data[,1:4])
+print(svd.auto$v)
 ```
 
 
 ```{r}
-auto.svd <- svd(auto[2:5])
+plot(x=auto.data[,5], y=svd.auto$u[,1])
 ```
 
 ```{r}
-plot(auto$mpg, auto.svd$u[, 1])
+plot(x=auto.data[,5], y=svd.auto$u[,2])
 ```
-
-
 
 ```{r}
-# perform principal components analysis
-pca <- prcomp( ~ mpg + displacement + horsepower + weight + acceleration, data = auto, scale=TRUE) 
-
-plot(pca$x)
+plot(x=auto.data[,5], y=svd.auto$u[,3])
 ```
 
+```{r}
+plot(x=auto.data[,5], y=svd.auto$u[,4])
+```
+
+Displacement and horsepower explain most of the variation. 
+```{r}
+pc <-prcomp(auto.data[,1:4])
+plot(pc)
+```
+
+```{r}
+summary(pc)
+```
 
 
 2.3)  
@@ -276,26 +275,22 @@ colnames(stand.data)<-c("SqFt", "Rooms","Price")
 ```
 
 ```{r}
-
+# based off reference code: http://www.r-bloggers.com/linear-regression-by-gradient-descent/
 x <- stand.data$SqFt
 y <- stand.data$Price
-# squared error cost function
+
+alpha <- 0.001
+num_iters <- 100
+
 cost <- function(X, y, theta) {
   sum( (X %*% theta - y)^2 ) / (2*length(y))
 }
 
-# learning rate and iteration limit
-alpha <- 0.01
-num_iters <- 1000
-
-# keep history
 cost_history <- double(num_iters)
 theta_history <- list(num_iters)
 
-# initialize coefficients
 theta <- matrix(c(0,0), nrow=2)
 
-# add a column of 1's for the intercept coefficient
 X <- cbind(1, matrix(x))
 
 # gradient descent
@@ -319,5 +314,115 @@ abline(coef=theta, col='blue')
 
 ```{r}
 plot(cost_history, type='line', col='blue', lwd=2, main='Cost function', ylab='cost', xlab='Iterations')
+```
+
+```{r}
+alpha <- 0.01
+
+for (i in 1:num_iters) {
+  error <- (X %*% theta - y)
+  delta <- t(X) %*% error / length(y)
+  theta <- theta - alpha * delta
+  cost_history[i] <- cost(X, y, theta)
+  theta_history[[i]] <- theta
+}
+
+print(theta)
+
+# plot data and converging fit
+plot(x,y, col=rgb(0.2,0.4,0.6,0.4), main='Linear regression by gradient descent')
+for (i in c(1,3,6,10,14,seq(20,num_iters,by=10))) {
+  abline(coef=theta_history[[i]], col=rgb(0.8,0,0,0.3))
+}
+abline(coef=theta, col='blue')
+```
+
+```{r}
+plot(cost_history, type='line', col='blue', lwd=2, main='Cost function', ylab='cost', xlab='Iterations')
+```
+
+```{r}
+alpha <- 0.1
+
+for (i in 1:num_iters) {
+  error <- (X %*% theta - y)
+  delta <- t(X) %*% error / length(y)
+  theta <- theta - alpha * delta
+  cost_history[i] <- cost(X, y, theta)
+  theta_history[[i]] <- theta
+}
+
+print(theta)
+
+# plot data and converging fit
+plot(x,y, col=rgb(0.2,0.4,0.6,0.4), main='Linear regression by gradient descent')
+for (i in c(1,3,6,10,14,seq(20,num_iters,by=10))) {
+  abline(coef=theta_history[[i]], col=rgb(0.8,0,0,0.3))
+}
+abline(coef=theta, col='blue')
+```
+
+```{r}
+plot(cost_history, type='line', col='blue', lwd=2, main='Cost function', ylab='cost', xlab='Iterations')
+```
+
+```{r}
+alpha <- 1.0
+
+for (i in 1:num_iters) {
+  error <- (X %*% theta - y)
+  delta <- t(X) %*% error / length(y)
+  theta <- theta - alpha * delta
+  cost_history[i] <- cost(X, y, theta)
+  theta_history[[i]] <- theta
+}
+
+print(theta)
+
+# plot data and converging fit
+plot(x,y, col=rgb(0.2,0.4,0.6,0.4), main='Linear regression by gradient descent')
+for (i in c(1,3,6,10,14,seq(20,num_iters,by=10))) {
+  abline(coef=theta_history[[i]], col=rgb(0.8,0,0,0.3))
+}
+abline(coef=theta, col='blue')
+```
+
+```{r}
+plot(cost_history, type='line', col='blue', lwd=2, main='Cost function', ylab='cost', xlab='Iterations')
+```
+
+
+```{r}
+lm <- lm(Price ~ SqFt + Rooms, data = stand.data)
+print(lm)
+```
+
+```{r}
+plot(lm)
+```
+
+```{r}
+#Pasted from homework 
+solve.LS <-function(A,b){
+  x.hat <- solve(t(A)%*%A)%*%(t(A)%*%b)
+  return(x.hat)
+}
+
+A.house <- as.matrix(stand.data[,1:2])
+b.house <- as.matrix(stand.data[,3])
+
+x.hat.house <- solve.LS(A.house, b.house)
+print(x.hat.house)
+```
+
+
+```{r}
+require(boot)
+
+houses.glm <- glm(Price ~ Rooms + Price, data = stand.data)
+
+cv <- cv.glm(stand.data, houses.glm, K=5)
+
+cv$delta
 ```
 
